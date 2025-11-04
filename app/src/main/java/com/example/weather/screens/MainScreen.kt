@@ -45,9 +45,12 @@ import com.example.weather.R
 import com.example.weather.data.WeatherModel
 import com.example.weather.ui.theme.*
 import kotlinx.coroutines.launch
+import org.json.JSONArray
+import org.json.JSONObject
+import java.util.ArrayList
 
 @Composable
-fun MainScreen(daysList: MutableState<List<WeatherModel>>, currentDay: MutableState<WeatherModel>) {
+fun MainScreen(daysList: MutableState<List<WeatherModel>>, currentDay: MutableState<WeatherModel>, onClickSync: () -> Unit, onClickSearch: () -> Unit) {
     Image(
         painter = painterResource(id = R.drawable.clouds),
         contentDescription = "clouds",
@@ -63,15 +66,15 @@ fun MainScreen(daysList: MutableState<List<WeatherModel>>, currentDay: MutableSt
             .padding(5.dp)
     ) {
         Spacer(Modifier.height(40.dp))
-        MainCard(currentDay)
+        MainCard(currentDay,onClickSync,onClickSearch)
         Spacer(modifier = Modifier.height(8.dp))
-        TabLayout(daysList)
+        TabLayout(daysList,currentDay)
         Spacer(modifier = Modifier.height(100.dp))
     }
 }
 
 @Composable
-fun MainCard(currentDay: MutableState<WeatherModel>) {
+fun MainCard(currentDay: MutableState<WeatherModel>, onClickSync: () -> Unit, onClickSearch: () -> Unit) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(10.dp),
@@ -115,7 +118,9 @@ fun MainCard(currentDay: MutableState<WeatherModel>) {
             )
 
             Text(
-                text = currentDay.value.currentTemp + "°C",
+                text = if(currentDay.value.currentTemp.isNotEmpty())
+                    currentDay.value.currentTemp + "°C"
+                else currentDay.value.minTemp + "/" + currentDay.value.maxTemp,
                 fontSize = 50.sp,
                 color = Color.White
             )
@@ -133,7 +138,7 @@ fun MainCard(currentDay: MutableState<WeatherModel>) {
             )
             {
                 IconButton(onClick = {
-
+                    onClickSearch.invoke()
                 })
                 {
                     Icon(
@@ -144,13 +149,15 @@ fun MainCard(currentDay: MutableState<WeatherModel>) {
                 }
 
                 Text(
-                    text = currentDay.value.minTemp + "°C / " +currentDay.value.maxTemp + "°C",
+                    text = if(currentDay.value.currentTemp.isEmpty())
+                        ""
+                    else currentDay.value.minTemp + "/" + currentDay.value.maxTemp,
                     fontSize = 15.sp,
                     color = Color.White
                 )
 
                 IconButton(onClick = {
-
+                        onClickSync.invoke()
                 })
                 {
                     Icon(
@@ -165,7 +172,7 @@ fun MainCard(currentDay: MutableState<WeatherModel>) {
 }
 
 @Composable
-fun TabLayout(daysList: MutableState<List<WeatherModel>>) {
+fun TabLayout(daysList: MutableState<List<WeatherModel>>, currentDay: MutableState<WeatherModel>) {
 
     val tabList = listOf("HOURS", "DAYS")
     val pagerState = rememberPagerState(pageCount = { tabList.size })
@@ -211,37 +218,40 @@ fun TabLayout(daysList: MutableState<List<WeatherModel>>) {
             state = pagerState,
             modifier = Modifier.weight(1.0f)
         ) { page ->
-            when (page) {
-                0 -> HoursContent(daysList)
-                1 -> DaysContent(daysList)
+            val list = when(page){
+                0 -> getWeatherByHours(currentDay.value.hours)
+                1 -> daysList.value
+                else -> daysList.value
             }
+            MainList(list, currentDay)
+
         }
     }
 }
 
-@Composable
-fun HoursContent(daysList: MutableState<List<WeatherModel>>) {
-    LazyColumn(modifier = Modifier.fillMaxSize())
-    {
-        itemsIndexed(
-            daysList.value
-        ) { index, item ->
-            ListItem(item)
-        }
-    }
-}
+private fun getWeatherByHours(hours: String):List<WeatherModel>{
+    if(hours.isEmpty())return listOf()
 
-@Composable
-fun DaysContent(daysList: MutableState<List<WeatherModel>>) {
-    LazyColumn(modifier = Modifier.fillMaxSize())
-    {
-        itemsIndexed(
-            daysList.value
-        ) { index, item ->
-            ListItem(item)
-        }
-    }
+    val hoursArray = JSONArray(hours)
+    val list = ArrayList<WeatherModel>()
 
+    for(i in 0 until hoursArray.length()){
+        val item = hoursArray[i] as JSONObject
+        list.add(
+            WeatherModel(
+                "",
+                item.getString("time"),
+                item.getString("temp_c"),
+                item.getJSONObject("condition").getString("text"),
+                item.getJSONObject("condition").getString("icon"),
+                "",
+                "",
+                ""
+
+            )
+        )
+    }
+    return list
 }
 
 

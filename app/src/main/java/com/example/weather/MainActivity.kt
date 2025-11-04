@@ -14,6 +14,7 @@ import com.android.volley.toolbox.StringRequest
 import com.android.volley.toolbox.Volley
 import com.example.weather.data.WeatherModel
 import com.example.weather.screens.MainScreen
+import com.example.weather.screens.dialogSearch
 import com.example.weather.ui.theme.WeatherTheme
 import org.json.JSONObject
 
@@ -27,6 +28,10 @@ class MainActivity : ComponentActivity() {
             WeatherTheme {
                 val daysList = remember {
                     mutableStateOf(listOf<WeatherModel>())
+                }
+
+                val dialogState = remember {
+                    mutableStateOf(false)
                 }
 
                 val currentDay = remember {
@@ -45,8 +50,19 @@ class MainActivity : ComponentActivity() {
                     )
                 }
 
-                getData("Moscow", this, daysList as MutableState<List<WeatherModel>>, currentDay)
-                MainScreen(daysList, currentDay)
+                if(dialogState.value){
+                    dialogSearch(dialogState, onSubmit = {
+                        getData(it, this, daysList, currentDay)
+                    })
+                }
+
+                getData("Moscow", this, daysList, currentDay)
+                MainScreen(daysList, currentDay, onClickSync = {
+                    getData("Moscow", this, daysList, currentDay)
+                },
+                    onClickSearch = {
+                        dialogState.value = true
+                    })
             }
         }
     }
