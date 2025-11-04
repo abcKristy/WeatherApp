@@ -55,7 +55,6 @@ dependencies {
     implementation("com.goole.accompanist:accompanist-pager:0.19.0")
     implementation("com.goole.accompanist:accompanist-pager-indicators:0.19.0")
 
-
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
