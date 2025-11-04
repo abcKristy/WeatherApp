@@ -5,12 +5,14 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
@@ -25,6 +27,7 @@ import androidx.compose.material3.TabRow
 import androidx.compose.material3.TabRowDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -35,17 +38,16 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.example.weather.R
+import com.example.weather.data.WeatherModel
 import com.example.weather.ui.theme.*
 import kotlinx.coroutines.launch
 
 @Composable
-@Preview(showBackground = true)
-fun MainScreen() {
+fun MainScreen(daysList: MutableState<List<WeatherModel>>, currentDay: MutableState<WeatherModel>) {
     Image(
         painter = painterResource(id = R.drawable.clouds),
         contentDescription = "clouds",
@@ -61,14 +63,15 @@ fun MainScreen() {
             .padding(5.dp)
     ) {
         Spacer(Modifier.height(40.dp))
-        MainCard()
+        MainCard(currentDay)
         Spacer(modifier = Modifier.height(8.dp))
-        TabLayout()
+        TabLayout(daysList)
+        Spacer(modifier = Modifier.height(100.dp))
     }
 }
 
 @Composable
-fun MainCard() {
+fun MainCard(currentDay: MutableState<WeatherModel>) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(10.dp),
@@ -92,13 +95,13 @@ fun MainCard() {
             )
             {
                 Text(
-                    text = "20 Jun 2025 13:00",
+                    text = currentDay.value.time,
                     fontSize = 15.sp,
                     color = Color.White
                 )
 
                 AsyncImage(
-                    model = "http://cdn.weatherapi.com/weather/64x64/day/116.png",
+                    model = "https:"+ currentDay.value.icon,
                     contentDescription = "sign",
                     modifier = Modifier.size(35.dp)
                 )
@@ -106,19 +109,19 @@ fun MainCard() {
             }
 
             Text(
-                text = "London",
+                text = currentDay.value.city,
                 fontSize = 30.sp,
                 color = Color.White
             )
 
             Text(
-                text = "23°C",
+                text = currentDay.value.currentTemp + "°C",
                 fontSize = 50.sp,
                 color = Color.White
             )
 
             Text(
-                text = "Cloudy",
+                text = currentDay.value.condition,
                 fontSize = 15.sp,
                 color = Color.White
             )
@@ -141,7 +144,7 @@ fun MainCard() {
                 }
 
                 Text(
-                    text = "23°C - 12°C",
+                    text = currentDay.value.minTemp + "°C / " +currentDay.value.maxTemp + "°C",
                     fontSize = 15.sp,
                     color = Color.White
                 )
@@ -162,7 +165,7 @@ fun MainCard() {
 }
 
 @Composable
-fun TabLayout() {
+fun TabLayout(daysList: MutableState<List<WeatherModel>>) {
 
     val tabList = listOf("HOURS", "DAYS")
     val pagerState = rememberPagerState(pageCount = { tabList.size })
@@ -170,7 +173,7 @@ fun TabLayout() {
     val corroutineScope = rememberCoroutineScope()
 
     Column(
-        modifier = Modifier.clip(RoundedCornerShape(10.dp))
+        modifier = Modifier.clip(RoundedCornerShape(10.dp)).fillMaxHeight(0.93f)
     ) {
         TabRow(
             selectedTabIndex = tabIndex,
@@ -209,26 +212,35 @@ fun TabLayout() {
             modifier = Modifier.weight(1.0f)
         ) { page ->
             when (page) {
-                0 -> HoursContent()
-                1 -> DaysContent()
+                0 -> HoursContent(daysList)
+                1 -> DaysContent(daysList)
             }
         }
     }
 }
 
 @Composable
-fun HoursContent() {
+fun HoursContent(daysList: MutableState<List<WeatherModel>>) {
     LazyColumn(modifier = Modifier.fillMaxSize())
     {
-        items(15) {
-            ListItem()
+        itemsIndexed(
+            daysList.value
+        ) { index, item ->
+            ListItem(item)
         }
     }
-
 }
 
 @Composable
-fun DaysContent() {
+fun DaysContent(daysList: MutableState<List<WeatherModel>>) {
+    LazyColumn(modifier = Modifier.fillMaxSize())
+    {
+        itemsIndexed(
+            daysList.value
+        ) { index, item ->
+            ListItem(item)
+        }
+    }
 
 }
 
