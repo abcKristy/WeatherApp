@@ -52,8 +52,8 @@ dependencies {
     implementation(libs.androidx.compose.material3)
 
     implementation("io.coil-kt:coil-compose:2.7.0")
-    implementation("com.goole.accompanist:accompanist-pager:0.19.0")
-    implementation("com.goole.accompanist:accompanist-pager-indicators:0.19.0")
+    implementation("com.google.accompanist:accompanist-pager:0.36.0")
+    implementation("com.google.accompanist:accompanist-pager-indicators:0.36.0")
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
