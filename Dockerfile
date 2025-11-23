@@ -23,5 +23,3 @@ RUN yes | sdkmanager --licenses && \
 RUN chmod +x ./gradlew
 
 RUN ./gradlew assembleDebug
-
-CMD ["sleep", "infinity"]
